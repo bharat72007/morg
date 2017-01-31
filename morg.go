@@ -83,7 +83,6 @@ func parseTag(tag string, fieldname string) {
 			if t := strings.Split(token, ":"); t[0] == "tblname" {
 				orm.ColumnName[fieldname] = t[1]
 			}
-
 		} else {
 			if token == "pk" {
 				orm.PK = fieldname
@@ -115,3 +114,19 @@ func delete(user User) {
 	args = append(args, user.id)
 	rs, err := sql.DB.Prepare(query, args)
 }
+
+func autogeneratetable() {
+	//Model State needs to be retrieved in order to generate table.
+	//This part can be put in Config File.
+}
+
+func deletetableIfExists() {
+	//This part can be put in Config File and re create a new Table.
+}
+
+//Single Table Representation.
+//orm.read(user) ==> Give SELECT * FROM USER;
+//orm.read(user).Projection(fields ... string) ==> Give SELECT f1,f2 FROM USER;
+//orm.read(user).Filter(condition).Projection(fields ... string) ==> SELECT f1,f2 FROM USER WHERE condition;
+//orm.read(user).Filter(condition1).GROUPBY(fields ... string).HAVING(condition2) ==> SELECT * from USER GROUPBY f2 HAVING condition2;
+//orm.read(user).Filter(conditon1).ORDERBY(ASC) ==> SELECT * FROM USER WHERE conditon1 ORDER BY ASC;
