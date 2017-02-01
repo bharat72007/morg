@@ -29,12 +29,22 @@ type BetweenRestriction struct {
 	resttype string
 }
 
+type InRestriction struct {
+	column   string
+	list     []interface{}
+	resttype string
+}
+
 func CreateCriteria() *Criteria {
 	return &Criteria{Restrictions: make([]interface{}, 0)}
 }
 
 func NewBetweenRestriction(col string, lval, rval interface{}, rtype string) *BetweenRestriction {
 	return &BetweenRestriction{column: col, lbound: lval, ubound: rval, resttype: rtype}
+}
+
+func NewInRestriction(col string, vals []interface{}, rtype string) *InRestriction {
+	return &InRestriction{column: col, list: vals, resttype: rtype}
 }
 
 func NewRestriction(col string, val interface{}, rtype string) *Restriction {
@@ -64,6 +74,15 @@ func (restriction Restriction) tostring() string {
 
 func (restriction BetweenRestriction) tostring() string {
 	strs := "BETWEEN" + " " + restriction.column + " " + restriction.lbound.(string) + " " + "AND" + " " + restriction.ubound.(string)
+	return strs
+}
+
+func (restriction InRestriction) tostring() string {
+	newlist := make([]string, 0)
+	for _, v := range restriction.list {
+		newlist = append(newlist, v.(string))
+	}
+	strs := restriction.column + " " + "IN" + " " + " (" + strings.Join(newlist, ",") + ")"
 	return strs
 }
 
@@ -99,6 +118,10 @@ func (restriction Restriction) Between(col string, val1, val2 interface{}) *Betw
 	return NewBetweenRestriction(col, val1, val2, "BETWEEN")
 }
 
+func (restriction Restriction) In(col string, val []interface{}) *InRestriction {
+	return NewInRestriction(col, val, "IN")
+}
+
 func (query *Query) Project(fields ...string) *Query {
 	query.Projection = strings.Join(fields, ",")
 	return query
@@ -132,6 +155,8 @@ func (query *Query) transform() {
 				tokens = append(tokens, query.Filter.Restrictions[i].(*Restriction).tostring())
 			case *BetweenRestriction:
 				tokens = append(tokens, query.Filter.Restrictions[i].(*BetweenRestriction).tostring())
+			case *InRestriction:
+				tokens = append(tokens, query.Filter.Restrictions[i].(*InRestriction).tostring())
 			default:
 				fmt.Printf("%T", t)
 			}
@@ -148,10 +173,10 @@ func main() {
 	//query.transform()
 	criteria := CreateCriteria()
 	res := Restriction{}
-	/*ag := make([]int, 0)
-	ag = append(ag, 10)
-	ag = append(ag, 20)*/
-	criteria.add(res.Equal("age", "22")).add(res.Gt("rollno", "900")).add(res.NotEqual("age", "80")).add(res.Between("name", "00", "9"))
+	ag := make([]interface{}, 0)
+	ag = append(ag, "10")
+	ag = append(ag, "20")
+	criteria.add(res.Equal("age", "22")).add(res.Gt("rollno", "900")).add(res.NotEqual("age", "80")).add(res.Between("name", "00", "9")).add(res.In("age", ag))
 	query.AddCriteria(criteria)
 	query.transform()
 }
