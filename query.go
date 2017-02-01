@@ -13,7 +13,7 @@ type Query struct {
 
 type Criteria struct {
 	//can have list of Restriction
-	Restrictions []Restriction
+	Restrictions []interface{}
 }
 
 type Restriction struct {
@@ -22,8 +22,19 @@ type Restriction struct {
 	resttype string
 }
 
+type BetweenRestriction struct {
+	column   string
+	lbound   interface{}
+	ubound   interface{}
+	resttype string
+}
+
 func CreateCriteria() *Criteria {
-	return &Criteria{Restrictions: make([]Restriction, 0)}
+	return &Criteria{Restrictions: make([]interface{}, 0)}
+}
+
+func NewBetweenRestriction(col string, lval, rval interface{}, rtype string) *BetweenRestriction {
+	return &BetweenRestriction{column: col, lbound: lval, ubound: rval, resttype: rtype}
 }
 
 func NewRestriction(col string, val interface{}, rtype string) *Restriction {
@@ -34,8 +45,8 @@ func NewQuery() *Query {
 	return &Query{}
 }
 
-func (criteria *Criteria) add(restriction *Restriction) *Criteria {
-	criteria.Restrictions = append(criteria.Restrictions, *restriction)
+func (criteria *Criteria) add(restriction interface{}) *Criteria {
+	criteria.Restrictions = append(criteria.Restrictions, restriction)
 	return criteria
 }
 
@@ -48,6 +59,11 @@ func (criteria *Criteria) add(restriction *Restriction) *Criteria {
 func (restriction Restriction) tostring() string {
 
 	strs := restriction.column + " " + restriction.resttype + " " + restriction.value.(string)
+	return strs
+}
+
+func (restriction BetweenRestriction) tostring() string {
+	strs := "BETWEEN" + " " + restriction.column + " " + restriction.lbound.(string) + " " + "AND" + " " + restriction.ubound.(string)
 	return strs
 }
 
@@ -79,9 +95,9 @@ func (restriction Restriction) Like(col string, val interface{}) *Restriction {
 	return NewRestriction(col, val, "LIKE")
 }
 
-/*func (restriction Restriction) Between(col string, val interface{}) *Restriction {
-	return NewRestriction(col, val, "BETWEEN")
-}*/
+func (restriction Restriction) Between(col string, val1, val2 interface{}) *BetweenRestriction {
+	return NewBetweenRestriction(col, val1, val2, "BETWEEN")
+}
 
 func (query *Query) Project(fields ...string) *Query {
 	query.Projection = strings.Join(fields, ",")
@@ -109,11 +125,15 @@ func (query *Query) transform() {
 	if len(query.Filter.Restrictions) > 0 {
 		//TODO
 
+		tokens = append(tokens, "WHERE")
 		for i := 0; i < len(query.Filter.Restrictions); i++ {
-			if i == 0 {
-				tokens = append(tokens, "WHERE", query.Filter.Restrictions[i].tostring())
-			} else {
-				tokens = append(tokens, "AND", query.Filter.Restrictions[i].tostring())
+			switch t := query.Filter.Restrictions[i].(type) {
+			case *Restriction:
+				tokens = append(tokens, query.Filter.Restrictions[i].(*Restriction).tostring())
+			case *BetweenRestriction:
+				tokens = append(tokens, query.Filter.Restrictions[i].(*BetweenRestriction).tostring())
+			default:
+				fmt.Printf("%T", t)
 			}
 		}
 
@@ -131,7 +151,7 @@ func main() {
 	/*ag := make([]int, 0)
 	ag = append(ag, 10)
 	ag = append(ag, 20)*/
-	criteria.add(res.Equal("age", "22")).add(res.Gt("rollno", "900")).add(res.NotEqual("age", "80")) /*.add(res.Between("age", ag))*/
+	criteria.add(res.Equal("age", "22")).add(res.Gt("rollno", "900")).add(res.NotEqual("age", "80")).add(res.Between("name", "00", "9"))
 	query.AddCriteria(criteria)
 	query.transform()
 }
