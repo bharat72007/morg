@@ -1,142 +1,137 @@
-package morg
+package main
+
+import (
+	"fmt"
+	"strings"
+)
 
 type Query struct {
-	Projection []interface{}
-	Filter     *Condition
-	From       interface{}
+	Projection string
+	Filter     *Criteria
+	From       string
 }
 
-type Condition struct {
+type Criteria struct {
 	//can have list of Restriction
 	Restrictions []Restriction
 }
 
 type Restriction struct {
-	column interface{}
-	value  interface{}
-	typ    string
+	column   string
+	value    interface{}
+	resttype string
 }
 
-func NewQuery(table interface{}) *Query {
-	return &Query{Projection: make([]string, 0), Filter: nil, From: table}
+func CreateCriteria() *Criteria {
+	return &Criteria{Restrictions: make([]Restriction, 0)}
 }
 
-func (query *Query) addProjection(fields ...interface{}) *Query {
-	numFields := len(fields)
-	for i := 0; i < numFields; i++ {
-		query.Projection = append(query.Projection, fields[i])
+func NewRestriction(col string, val interface{}, rtype string) *Restriction {
+	return &Restriction{column: col, value: val, resttype: rtype}
+}
+
+func NewQuery() *Query {
+	return &Query{}
+}
+
+func (criteria *Criteria) add(restriction *Restriction) *Criteria {
+	criteria.Restrictions = append(criteria.Restrictions, *restriction)
+	return criteria
+}
+
+/*func (criteria *Criteria) addOr(restriction1, restriction2 *Restriction) *Criteria {
+	criteria.Restrictions = append(criteria.Restrictions, *restriction1)
+	criteria.Restrictions = append(criteria.Restrictions, *restriction2)
+	return criteria
+}*/
+
+func (restriction Restriction) tostring() string {
+
+	strs := restriction.column + " " + restriction.resttype + " " + restriction.value.(string)
+	return strs
+}
+
+func (restriction Restriction) Equal(col string, val interface{}) *Restriction {
+	return NewRestriction(col, val, "=")
+}
+
+func (restriction Restriction) NotEqual(col string, val interface{}) *Restriction {
+	return NewRestriction(col, val, "<>")
+}
+
+func (restriction Restriction) Gt(col string, val interface{}) *Restriction {
+	return NewRestriction(col, val, ">")
+}
+
+func (restriction Restriction) Gte(col string, val interface{}) *Restriction {
+	return NewRestriction(col, val, ">=")
+}
+
+func (restriction Restriction) Lte(col string, val interface{}) *Restriction {
+	return NewRestriction(col, val, "<=")
+}
+
+func (restriction Restriction) Lt(col string, val interface{}) *Restriction {
+	return NewRestriction(col, val, "<")
+}
+
+func (restriction Restriction) Like(col string, val interface{}) *Restriction {
+	return NewRestriction(col, val, "LIKE")
+}
+
+/*func (restriction Restriction) Between(col string, val interface{}) *Restriction {
+	return NewRestriction(col, val, "BETWEEN")
+}*/
+
+func (query *Query) Project(fields ...string) *Query {
+	query.Projection = strings.Join(fields, ",")
+	return query
+}
+
+func (query *Query) Tables(tables ...string) *Query {
+	query.From = strings.Join(tables, ",")
+	return query
+}
+
+func (query *Query) AddCriteria(criteria *Criteria) *Query {
+	query.Filter = criteria
+	return query
+}
+
+func (query *Query) transform() {
+	var tokens []string = make([]string, 0)
+	if query.Projection != "" {
+		tokens = append(tokens, "SELECT", query.Projection)
 	}
-	return &query
+	if query.From != "" {
+		tokens = append(tokens, "FROM", query.From)
+	}
+	if len(query.Filter.Restrictions) > 0 {
+		//TODO
+
+		for i := 0; i < len(query.Filter.Restrictions); i++ {
+			if i == 0 {
+				tokens = append(tokens, "WHERE", query.Filter.Restrictions[i].tostring())
+			} else {
+				tokens = append(tokens, "AND", query.Filter.Restrictions[i].tostring())
+			}
+		}
+
+	}
+	fmt.Println(tokens)
 }
 
-func (query *Query) addFilter(condition Condition) *Query {
-	query.Filter = condition
-	return &query
-}
+func main() {
 
-func NewRestriction(k, v interface{}) *Restriction {
-	return &Restriction{column: k, value: v, typ: nil}
-}
-
-func NewCondition() *Condition {
-	return &Condition{Restrictions: make([]Restriction, 0)}
-}
-
-func (condition *Condition) Equal(k, v interface{}) *Condition {
-	restriction := NewRestriction(k, v)
-	restriction.typ = "="
-	condition.Restrictions = append(condition.Restrictions, restriction)
-	return &condition
-}
-
-func (condition *Condition) Gt(k, v interface{}) *Condition {
-	restriction := NewRestriction(k, v)
-	restriction.typ = ">"
-	condition.Restrictions = append(condition.Restrictions, restriction)
-	return &condition
-}
-
-func (condition *Condition) Lt(k, v interface{}) *Condition {
-	restriction := NewRestriction(k, v)
-	restriction.typ = "<"
-	condition.Restrictions = append(condition.Restrictions, restriction)
-	return &condition
-}
-
-func (condition *Condition) NotEqual(k, v interface{}) *Condition {
-	restriction := NewRestriction(k, v)
-	restriction.typ = "!="
-	condition.Restrictions = append(condition.Restrictions, restriction)
-	return &condition
-}
-
-func (condition *Condition) Like(k, v interface{}) *Condition {
-	restriction := NewRestriction(k, v)
-	restriction.typ = "like"
-	condition.Restrictions = append(condition.Restrictions, restriction)
-	return &condition
-}
-
-func (condition *Condition) ILike(k, v interface{}) *Condition {
-	restriction := NewRestriction(k, v)
-	restriction.typ = "ilike"
-	condition.Restrictions = append(condition.Restrictions, restriction)
-	return &condition
-}
-
-func (condition *Condition) IsEmpty(k interface{}) *Condition {
-	restriction := NewRestriction(k, nil)
-	restriction.typ = "IsEmpty"
-	condition.Restrictions = append(condition.Restrictions, restriction)
-	return &condition
-}
-
-func (condition *Condition) IsNotEmpty(k interface{}) *Condition {
-	restriction := NewRestriction(k, nil)
-	restriction.typ = "IsNotEmpty"
-	condition.Restrictions = append(condition.Restrictions, restriction)
-	return &condition
-}
-
-func (condition *Condition) IsNull(k interface{}) *Condition {
-	restriction := NewRestriction(k, nil)
-	restriction.typ = "IsNull"
-	condition.Restrictions = append(condition.Restrictions, restriction)
-	return &condition
-}
-
-func (condition *Condition) IsNotNull(k interface{}) *Condition {
-	restriction := NewRestriction(k, nil)
-	restriction.typ = "IsNotNull"
-	condition.Restrictions = append(condition.Restrictions, restriction)
-	return &condition
-}
-
-//Example1 :
-// SELECT f1,f2 FROM tablename
-//Create Query structure
-// query := NewQuery("USER")
-//query.addProjection("f1","f2")
-
-//Example2 :
-//SELECT f1,f2 FROM tablename WHERE f3 > 9
-//query := NewQuery("USER")
-//query.addProjection("f1","f2")
-//con := NewCondition()
-//con.Gt("f3","9")
-//query.addFilter(con)
-
-func examples() {
-
-	//Example #1
-	query := NewQuery("USER")
-	query.addProjection("name", "age")
-
-	//Example #2
-	query1 := NewQuery("USER")
-	query1.addProjection("name")
-	cond := NewCondition()
-	cond.Gt("age", 9)
-	query.addFilter(cond)
-
+	query := NewQuery()
+	query.Project("name", "age", "rollno", "Student.name").Tables("User", "Student")
+	//query.transform()
+	criteria := CreateCriteria()
+	res := Restriction{}
+	/*ag := make([]int, 0)
+	ag = append(ag, 10)
+	ag = append(ag, 20)*/
+	criteria.add(res.Equal("age", "22")).add(res.Gt("rollno", "900")).add(res.NotEqual("age", "80")) /*.add(res.Between("age", ag))*/
+	query.AddCriteria(criteria)
+	query.transform()
 }

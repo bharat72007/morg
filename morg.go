@@ -1,8 +1,9 @@
-package main
+package morg
 
 import (
 	"database/sql"
 	"fmt"
+	"github.com/morg"
 	"reflect"
 	"strings"
 )
@@ -57,7 +58,7 @@ type User struct {
 	name string `orm:"tblname:Name"`
 }
 
-func main() {
+func main1() {
 	user := User{id: 11, name: "Cecil"}
 	st := reflect.TypeOf(user)
 	fieldnums := st.NumField()
@@ -74,6 +75,7 @@ func main() {
 	}
 	fmt.Println(orm.Unique)
 	fmt.Println(orm.NotNull)
+
 }
 
 func parseTag(tag string, fieldname string) {
