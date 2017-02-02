@@ -79,9 +79,7 @@ func NewQuery() *Query {
 
 func (criteria *Criteria) add(restriction interface{}) *Criteria {
 	criteria.Restrictions = append(criteria.Restrictions, restriction)
-	if len(criteria.Restrictions) > 1 {
-		criteria.combiners = append(criteria.combiners, "AND")
-	}
+	criteria.combiners = append(criteria.combiners, "AND")
 	return criteria
 }
 
@@ -91,9 +89,8 @@ func (criteria *Criteria) exclude(restriction interface{}) *Criteria {
 	return criteria
 }
 
-func (criteria *Criteria) addOr(restriction1, restriction2 interface{}) *Criteria {
-	criteria.Restrictions = append(criteria.Restrictions, restriction1)
-	criteria.Restrictions = append(criteria.Restrictions, restriction2)
+func (criteria *Criteria) Or(restriction interface{}) *Criteria {
+	criteria.Restrictions = append(criteria.Restrictions, restriction)
 	criteria.combiners = append(criteria.combiners, "OR")
 	return criteria
 }
@@ -209,14 +206,28 @@ func (query *Query) transform() {
 		for i := 0; i < len(query.Filter.Restrictions); i++ {
 			switch t := query.Filter.Restrictions[i].(type) {
 			case *Restriction:
-				tokens = append(tokens, query.Filter.Restrictions[i].(*Restriction).tostring())
-				tokens = append(tokens, query.Filter.combiners[i])
+				if query.Filter.combiners[i] == "NOT" {
+					tokens = append(tokens, "( NOT", query.Filter.Restrictions[i].(*Restriction).tostring(), ")")
+				} else if i == 0 || i == len(query.Filter.Restrictions)-1 {
+					tokens = append(tokens, query.Filter.Restrictions[i].(*Restriction).tostring())
+				} else {
+					tokens = append(tokens, query.Filter.combiners[i], query.Filter.Restrictions[i].(*Restriction).tostring())
+				}
+
 			case *BetweenRestriction:
-				tokens = append(tokens, query.Filter.Restrictions[i].(*BetweenRestriction).tostring())
-				tokens = append(tokens, query.Filter.combiners[i])
+				if i == 0 || i == len(query.Filter.Restrictions)-1 {
+					tokens = append(tokens, query.Filter.Restrictions[i].(*BetweenRestriction).tostring())
+				} else {
+					tokens = append(tokens, query.Filter.combiners[i], query.Filter.Restrictions[i].(*BetweenRestriction).tostring())
+				}
+
 			case *InRestriction:
-				tokens = append(tokens, query.Filter.Restrictions[i].(*InRestriction).tostring())
-			/*tokens = append(tokens, query.Filter.combiners[i])*/
+				if i == 0 || i == len(query.Filter.Restrictions)-1 {
+					tokens = append(tokens, query.Filter.Restrictions[i].(*InRestriction).tostring())
+				} else {
+					tokens = append(tokens, query.Filter.combiners[i], query.Filter.Restrictions[i].(*InRestriction).tostring())
+				}
+
 			case *LimitRestriction:
 				tokens = append(tokens, query.Filter.Restrictions[i].(*LimitRestriction).tostring())
 			case *OffsetRestriction:
@@ -239,7 +250,8 @@ func main() {
 	ag := make([]interface{}, 0)
 	ag = append(ag, "10")
 	ag = append(ag, "20")
-	criteria.add(restriction.Equal("age", "22")).add(restriction.Gt("rollno", "900")).add(restriction.NotEqual("age", "80")).add(restriction.Between("name", "00", "9")).add(restriction.In("age", ag)).add(restriction.Limit(10)).add(restriction.Offset(2))
+	criteria.exclude(restriction.Equal("name", "mane")).Or(restriction.Equal("age", "22")).add(restriction.Equal("age", "22")).add(restriction.Gt("rollno", "900")).add(restriction.NotEqual("age", "80")).add(restriction.Between("name", "00", "9")).add(restriction.In("age", ag)).add(restriction.Limit(10)).add(restriction.Offset(2))
+	//(NOT name = "mane") AND age = 22 AND rollno > 900 AND age <> 80 AND (re OR rs)
 	query := NewQuery()
 	query.Project("name", "age", "rollno", "Student.name") /*.Tables("User", "Student")*/
 	query.AddCriteria(criteria)
