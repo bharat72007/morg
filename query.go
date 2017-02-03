@@ -32,6 +32,12 @@ type Projection struct {
 	ptype  string
 }
 
+type AliasProjection struct {
+	column string
+	ptype  string
+	alias  string
+}
+
 type BetweenRestriction struct {
 	column string
 	lbound interface{}
@@ -67,6 +73,10 @@ func CreateCriteria(class interface{}) *Criteria {
 
 func NewBetweenRestriction(col string, lval, rval interface{}, rtype string) *BetweenRestriction {
 	return &BetweenRestriction{column: col, lbound: lval, ubound: rval, rtype: rtype}
+}
+
+func NewAliasProjection(col, aliasname string, rtype string) *AliasProjection {
+	return &AliasProjection{column: col, alias: aliasname, ptype: rtype}
 }
 
 func NewOrderByRestriction(col, order, rtype string) *OrderByRestriction {
@@ -125,13 +135,17 @@ func (restriction *Restriction) tostring() string {
 	return strs
 }
 
+func (projection *AliasProjection) tostring() string {
+	strs := projection.column + "  AS " + projection.alias
+	return strs
+}
+
 func (projection *Projection) tostring() string {
 	if projection.ptype == "distinct" {
 		return projection.ptype + " " + projection.column
 	} else {
 		return projection.ptype + "( " + projection.column + " )"
 	}
-
 }
 
 func (restriction *OrderByRestriction) tostring() string {
@@ -169,6 +183,10 @@ func (restriction *Restriction) Equal(col string, val interface{}) *Restriction 
 
 func (projection *Projection) Distinct(col string) *Projection {
 	return NewProjection(col, "distinct")
+}
+
+func (projection *AliasProjection) Alias(col, aliasname string) *AliasProjection {
+	return NewAliasProjection(col, aliasname, "alias")
 }
 
 func (projection *Projection) Sum(col string) *Projection {
@@ -264,10 +282,11 @@ func main() {
 	ag = append(ag, "10")
 	ag = append(ag, "20")
 	var projection Projection
+	var aliasprojection AliasProjection
 
 	criteria.exclude(restriction.Equal("name", "mane")).Or(restriction.Equal("age", "22")).add(restriction.Equal("age", "22")).add(restriction.Gt("rollno", "900")).add(restriction.NotEqual("age", "80")).add(restriction.Between("name", "00", "9")).add(restriction.In("age", ag)).add(restriction.Limit(10)).add(restriction.Offset(2)).add(restriction.OrderBy("age", "ASC")).add(restriction.OrderBy("name", "DESC"))
 	//(NOT name = "mane") AND age = 22 AND rollno > 900 AND age <> 80 AND (re OR rs)
-	criteria.addP(projection.Sum("age")).addP(projection.Count("*")).addP(projection.Distinct("name"))
+	criteria.addP(projection.Sum("age")).addP(projection.Count("*")).addP(projection.Distinct("name")).addP(aliasprojection.Alias("name", "StudentName"))
 	query := NewQuery()
 	query.Project("name", "age", "rollno", "Student.name") /*.Tables("User", "Student")*/
 	query.AddCriteria(criteria)
@@ -294,8 +313,17 @@ func (query *Query) transform() {
 				tokens = append(tokens, query.Filter.Projections[i].(*Projection).tostring())
 			}
 		}
-
 	}
+	if len(query.Filter.Projections) > 0 {
+		for i := 0; i < len(query.Filter.Projections); i++ {
+			switch query.Filter.Projections[i].(type) {
+			case *AliasProjection:
+
+				tokens = append(tokens, query.Filter.Projections[i].(*AliasProjection).tostring())
+			}
+		}
+	}
+
 	if query.Filter.Entity != "" {
 		tokens = append(tokens, "FROM", reflect.TypeOf(query.Filter.Entity).Elem().Name())
 	}
