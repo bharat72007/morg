@@ -126,8 +126,12 @@ func (restriction *Restriction) tostring() string {
 }
 
 func (projection *Projection) tostring() string {
-	strs := projection.ptype + "( " + projection.column + " )"
-	return strs
+	if projection.ptype == "distinct" {
+		return projection.ptype + " " + projection.column
+	} else {
+		return projection.ptype + "( " + projection.column + " )"
+	}
+
 }
 
 func (restriction *OrderByRestriction) tostring() string {
@@ -161,6 +165,10 @@ func (restriction *InRestriction) tostring() string {
 
 func (restriction *Restriction) Equal(col string, val interface{}) *Restriction {
 	return NewRestriction(col, val, "=")
+}
+
+func (projection *Projection) Distinct(col string) *Projection {
+	return NewProjection(col, "distinct")
 }
 
 func (projection *Projection) Sum(col string) *Projection {
@@ -259,7 +267,7 @@ func main() {
 
 	criteria.exclude(restriction.Equal("name", "mane")).Or(restriction.Equal("age", "22")).add(restriction.Equal("age", "22")).add(restriction.Gt("rollno", "900")).add(restriction.NotEqual("age", "80")).add(restriction.Between("name", "00", "9")).add(restriction.In("age", ag)).add(restriction.Limit(10)).add(restriction.Offset(2)).add(restriction.OrderBy("age", "ASC")).add(restriction.OrderBy("name", "DESC"))
 	//(NOT name = "mane") AND age = 22 AND rollno > 900 AND age <> 80 AND (re OR rs)
-	criteria.addP(projection.Sum("age")).addP(projection.Count("*"))
+	criteria.addP(projection.Sum("age")).addP(projection.Count("*")).addP(projection.Distinct("name"))
 	query := NewQuery()
 	query.Project("name", "age", "rollno", "Student.name") /*.Tables("User", "Student")*/
 	query.AddCriteria(criteria)
@@ -282,6 +290,7 @@ func (query *Query) transform() {
 		for i := 0; i < len(query.Filter.Projections); i++ {
 			switch query.Filter.Projections[i].(type) {
 			case *Projection:
+
 				tokens = append(tokens, query.Filter.Projections[i].(*Projection).tostring())
 			}
 		}
