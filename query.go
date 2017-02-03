@@ -67,6 +67,11 @@ type OrderByRestriction struct {
 	rtype  string
 }
 
+type GroupByRestriction struct {
+	column string
+	rtype  string
+}
+
 func CreateCriteria(class interface{}) *Criteria {
 	return &Criteria{Restrictions: make([]interface{}, 0), combiners: make([]string, 0), Entity: class}
 }
@@ -81,6 +86,10 @@ func NewAliasProjection(col, aliasname string, rtype string) *AliasProjection {
 
 func NewOrderByRestriction(col, order, rtype string) *OrderByRestriction {
 	return &OrderByRestriction{column: col, order: order, rtype: rtype}
+}
+
+func NewGroupByRestriction(col, rtype string) *GroupByRestriction {
+	return &GroupByRestriction{column: col, rtype: rtype}
 }
 
 func NewLimitRestriction(rows int, rtype string) *LimitRestriction {
@@ -150,6 +159,11 @@ func (projection *Projection) tostring() string {
 
 func (restriction *OrderByRestriction) tostring() string {
 	strs := restriction.column + " " + restriction.order
+	return strs
+}
+
+func (restriction *GroupByRestriction) tostring() string {
+	strs := restriction.column
 	return strs
 }
 
@@ -241,6 +255,10 @@ func (restriction *Restriction) OrderBy(col, order string) *OrderByRestriction {
 	return NewOrderByRestriction(col, order, "ORDER")
 }
 
+func (restriction *Restriction) GroupBy(col string) *GroupByRestriction {
+	return NewGroupByRestriction(col, "GROUPBY")
+}
+
 func (restriction *Restriction) In(col string, val []interface{}) *InRestriction {
 	return NewInRestriction(col, val, "IN")
 }
@@ -284,7 +302,7 @@ func main() {
 	var projection Projection
 	var aliasprojection AliasProjection
 
-	criteria.exclude(restriction.Equal("name", "mane")).Or(restriction.Equal("age", "22")).add(restriction.Equal("age", "22")).add(restriction.Gt("rollno", "900")).add(restriction.NotEqual("age", "80")).add(restriction.Between("name", "00", "9")).add(restriction.In("age", ag)).add(restriction.Limit(10)).add(restriction.Offset(2)).add(restriction.OrderBy("age", "ASC")).add(restriction.OrderBy("name", "DESC"))
+	criteria.exclude(restriction.Equal("name", "mane")).Or(restriction.Equal("age", "22")).add(restriction.Equal("age", "22")).add(restriction.Gt("rollno", "900")).add(restriction.NotEqual("age", "80")).add(restriction.Between("name", "00", "9")).add(restriction.In("age", ag)).add(restriction.Limit(10)).add(restriction.Offset(2)).add(restriction.GroupBy("name")).add(restriction.GroupBy("age")).add(restriction.OrderBy("age", "ASC")).add(restriction.OrderBy("name", "DESC"))
 	//(NOT name = "mane") AND age = 22 AND rollno > 900 AND age <> 80 AND (re OR rs)
 	criteria.addP(projection.Sum("age")).addP(projection.Count("*")).addP(projection.Distinct("name")).addP(aliasprojection.Alias("name", "StudentName"))
 	query := NewQuery()
@@ -301,6 +319,7 @@ func main() {
 func (query *Query) transform() {
 	var tokens []string = make([]string, 0)
 	var orderbyflag bool = false
+	var groupbyflag = false
 	//var ent string
 	if query.Projection != "" {
 		tokens = append(tokens, "SELECT", query.Projection)
@@ -360,6 +379,12 @@ func (query *Query) transform() {
 				tokens = append(tokens, query.Filter.Restrictions[i].(*LimitRestriction).tostring())
 			case *OffsetRestriction:
 				tokens = append(tokens, query.Filter.Restrictions[i].(*OffsetRestriction).tostring())
+			case *GroupByRestriction:
+				if !groupbyflag {
+					tokens = append(tokens, "GROUP BY")
+					groupbyflag = true
+				}
+				tokens = append(tokens, query.Filter.Restrictions[i].(*GroupByRestriction).tostring())
 			case *OrderByRestriction:
 				if !orderbyflag {
 					tokens = append(tokens, "ORDER BY")
