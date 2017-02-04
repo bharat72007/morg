@@ -1,7 +1,11 @@
 package criteria
 
 import (
+	"fmt"
 	c "github.com/morg/querybuilder/commons"
+	pj "github.com/morg/querybuilder/criteria/projections"
+	cr "github.com/morg/querybuilder/criteria/restrictions"
+	"reflect"
 	"strings"
 )
 
@@ -32,93 +36,89 @@ func (query *Query) transform() {
 	var whereflag bool = false
 	//var ent string
 	if query.Projection != "" {
-		tokens = append(tokens, "SELECT", query.Projection)
+		tokens = append(tokens, c.Keyword_SELECT, query.Projection)
 	} else {
-		tokens = append(tokens, "SELECT")
+		tokens = append(tokens, c.Keyword_SELECT)
 	}
 	if len(query.Filter.Projections) > 0 {
 		for i := 0; i < len(query.Filter.Projections); i++ {
 			switch query.Filter.Projections[i].(type) {
-			case *Projection:
-
-				tokens = append(tokens, query.Filter.Projections[i].(*Projection).tostring())
+			case *pj.Projection:
+				tokens = append(tokens, query.Filter.Projections[i].(*pj.Projection).Tostring())
 			}
 		}
 	}
 	if len(query.Filter.Projections) > 0 {
 		for i := 0; i < len(query.Filter.Projections); i++ {
 			switch query.Filter.Projections[i].(type) {
-			case *AliasProjection:
-
-				tokens = append(tokens, query.Filter.Projections[i].(*AliasProjection).tostring())
+			case *pj.AliasProjection:
+				tokens = append(tokens, query.Filter.Projections[i].(*pj.AliasProjection).Tostring())
 			}
 		}
 	}
-
 	if query.Filter.Entity != "" {
-		tokens = append(tokens, "FROM", reflect.TypeOf(query.Filter.Entity).Elem().Name())
+		tokens = append(tokens, c.Keyword_From, reflect.TypeOf(query.Filter.Entity).Elem().Name())
 	}
 	if len(query.Filter.Restrictions) > 0 {
 		//TODO
 		for i := 0; i < len(query.Filter.Restrictions); i++ {
 			switch t := query.Filter.Restrictions[i].(type) {
-			case *Restriction:
+			case *cr.Restriction:
 				if !whereflag {
-					tokens = append(tokens, "WHERE")
+					tokens = append(tokens, c.Keyword_Where)
 					whereflag = true
 				}
-				if query.Filter.Combiners[i] == "NOT" {
-					tokens = append(tokens, "( NOT", query.Filter.Restrictions[i].(*Restriction).tostring(), ")")
+				if query.Filter.Combiners[i] == c.Keyword_Not {
+					tokens = append(tokens, "( "+c.Keyword_Not, query.Filter.Restrictions[i].(*cr.Restriction).Tostring(), ")")
 				} else if i == 0 || i == len(query.Filter.Restrictions)-1 {
-					tokens = append(tokens, query.Filter.Restrictions[i].(*Restriction).tostring())
+					tokens = append(tokens, query.Filter.Restrictions[i].(*cr.Restriction).Tostring())
 				} else {
-					tokens = append(tokens, query.Filter.Combiners[i], query.Filter.Restrictions[i].(*Restriction).tostring())
+					tokens = append(tokens, query.Filter.Combiners[i], query.Filter.Restrictions[i].(*cr.Restriction).Tostring())
 				}
 
-			case *BetweenRestriction:
+			case *cr.BetweenRestriction:
 				if !whereflag {
-					tokens = append(tokens, "WHERE")
+					tokens = append(tokens, c.Keyword_Where)
 					whereflag = true
 				}
 				if i == 0 || i == len(query.Filter.Restrictions)-1 {
-					tokens = append(tokens, query.Filter.Restrictions[i].(*BetweenRestriction).tostring())
+					tokens = append(tokens, query.Filter.Restrictions[i].(*cr.BetweenRestriction).Tostring())
 				} else {
-					tokens = append(tokens, query.Filter.Combiners[i], query.Filter.Restrictions[i].(*BetweenRestriction).tostring())
+					tokens = append(tokens, query.Filter.Combiners[i], query.Filter.Restrictions[i].(*cr.BetweenRestriction).Tostring())
 				}
 
-			case *InRestriction:
+			case *cr.InRestriction:
 				if !whereflag {
-					tokens = append(tokens, "WHERE")
+					tokens = append(tokens, c.Keyword_Where)
 					whereflag = true
 				}
 				if i == 0 || i == len(query.Filter.Restrictions)-1 {
-					tokens = append(tokens, query.Filter.Restrictions[i].(*InRestriction).tostring())
+					tokens = append(tokens, query.Filter.Restrictions[i].(*cr.InRestriction).Tostring())
 				} else {
-					tokens = append(tokens, query.Filter.Combiners[i], query.Filter.Restrictions[i].(*InRestriction).tostring())
+					tokens = append(tokens, query.Filter.Combiners[i], query.Filter.Restrictions[i].(*cr.InRestriction).Tostring())
 				}
 
-			case *LimitRestriction:
-				tokens = append(tokens, query.Filter.Restrictions[i].(*LimitRestriction).tostring())
-			case *OffsetRestriction:
-				tokens = append(tokens, query.Filter.Restrictions[i].(*OffsetRestriction).tostring())
-			case *GroupByRestriction:
+			case *cr.LimitRestriction:
+				tokens = append(tokens, query.Filter.Restrictions[i].(*cr.LimitRestriction).Tostring())
+			case *cr.OffsetRestriction:
+				tokens = append(tokens, query.Filter.Restrictions[i].(*cr.OffsetRestriction).Tostring())
+			case *cr.GroupByRestriction:
 				if !groupbyflag {
-					tokens = append(tokens, "GROUP BY")
+					tokens = append(tokens, c.Keyword_GroupBy)
 					groupbyflag = true
 				}
-				tokens = append(tokens, query.Filter.Restrictions[i].(*GroupByRestriction).tostring())
-			case *OrderByRestriction:
+				tokens = append(tokens, query.Filter.Restrictions[i].(*cr.GroupByRestriction).Tostring())
+			case *cr.OrderByRestriction:
 				if !orderbyflag {
-					tokens = append(tokens, "ORDER BY")
+					tokens = append(tokens, c.Keyword_OrderBy)
 					orderbyflag = true
 				}
-				tokens = append(tokens, query.Filter.Restrictions[i].(*OrderByRestriction).tostring())
+				tokens = append(tokens, query.Filter.Restrictions[i].(*cr.OrderByRestriction).Tostring())
 
 			default:
 				fmt.Printf("%T", t)
 			}
 		}
-
 	}
 	fmt.Println(tokens)
 }

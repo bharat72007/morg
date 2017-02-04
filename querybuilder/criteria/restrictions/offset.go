@@ -2,6 +2,7 @@ package restrictions
 
 import (
 	c "github.com/morg/querybuilder/commons"
+	"strconv"
 	"strings"
 )
 
@@ -14,7 +15,7 @@ func NewOffsetRestriction(start int, rtype string) *OffsetRestriction {
 	return &OffsetRestriction{offset: start, rtype: rtype}
 }
 
-func (restriction *OffsetRestriction) tostring() string {
+func (restriction *OffsetRestriction) Tostring() string {
 	stmt := make([]string, 0)
 	stmt = append(stmt, c.Keyword_Offset)
 	stmt = append(stmt, c.Type_Space)

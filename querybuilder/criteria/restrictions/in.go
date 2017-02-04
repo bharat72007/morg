@@ -11,7 +11,7 @@ type InRestriction struct {
 	rtype  string
 }
 
-func (restriction *InRestriction) tostring() string {
+func (restriction *InRestriction) Tostring() string {
 	stmt := make([]string, 0)
 	stmt = append(stmt, restriction.column)
 	stmt = append(stmt, c.Type_Space)

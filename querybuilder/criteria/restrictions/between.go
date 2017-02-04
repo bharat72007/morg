@@ -20,7 +20,7 @@ func (restriction *Restriction) Between(col string, lvalue, uvalue interface{}) 
 	return NewBetweenRestriction(col, lvalue, uvalue, c.Type_Between)
 }
 
-func (restriction *BetweenRestriction) tostring() string {
+func (restriction *BetweenRestriction) Tostring() string {
 	stmt := make([]string, 0)
 	stmt = append(stmt, c.Keyword_Between)
 	stmt = append(stmt, c.Type_Space)

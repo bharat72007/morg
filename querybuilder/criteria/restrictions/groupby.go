@@ -17,6 +17,6 @@ func (restriction *Restriction) GroupBy(col string) *GroupByRestriction {
 	return NewGroupByRestriction(col, c.Type_Group)
 }
 
-func (restriction *GroupByRestriction) tostring() string {
+func (restriction *GroupByRestriction) Tostring() string {
 	return restriction.column
 }

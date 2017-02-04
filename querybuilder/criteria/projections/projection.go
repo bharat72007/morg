@@ -14,7 +14,7 @@ func NewProjection(col, ptype string) *Projection {
 	return &Projection{column: col, ptype: ptype}
 }
 
-func (projection *Projection) tostring() string {
+func (projection *Projection) Tostring() string {
 	if projection.ptype == c.Type_Project {
 		return projection.column
 	} else if projection.ptype == c.Type_Distinct {

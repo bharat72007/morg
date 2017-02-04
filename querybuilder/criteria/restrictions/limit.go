@@ -2,6 +2,7 @@ package restrictions
 
 import (
 	c "github.com/morg/querybuilder/commons"
+	"strconv"
 	"strings"
 )
 
@@ -14,7 +15,7 @@ func NewLimitRestriction(rows int, rtype string) *LimitRestriction {
 	return &LimitRestriction{rowscount: rows, rtype: rtype}
 }
 
-func (restriction *LimitRestriction) tostring() string {
+func (restriction *LimitRestriction) Tostring() string {
 	stmt := make([]string, 0)
 	stmt = append(stmt, c.Keyword_Limit)
 	stmt = append(stmt, c.Type_Space)

@@ -19,8 +19,11 @@ const (
 	Keyword_Distinct = "DISTINCT"
 	Keyword_Between  = "BETWEEN"
 	Keyword_And      = "AND"
+	Keyword_Not      = "NOT"
 	Keyword_Or       = "OR"
 	Keyword_In       = "IN"
+	Keyword_Where    = "WHERE"
+	Keyword_From     = "FROM"
 
 	Type_Alias           = "ALIAS"
 	Type_Limit           = "Limit"

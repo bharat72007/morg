@@ -19,7 +19,7 @@ func (projection *AliasProjection) Alias(col, aliasname string) *AliasProjection
 	return NewAliasProjection(col, aliasname, c.Type_Alias)
 }
 
-func (projection *AliasProjection) tostring() string {
+func (projection *AliasProjection) Tostring() string {
 	rslt := make([]string, 0)
 	rslt = append(rslt, projection.column)
 	rslt = append(rslt, c.Type_Space)
