@@ -29,7 +29,7 @@ func (query *Query) Project(fields ...string) *Query {
 	return query
 }
 
-func (query *Query) transform() {
+func (query *Query) Transform() {
 	var tokens []string = make([]string, 0)
 	var orderbyflag bool = false
 	var groupbyflag bool = false
