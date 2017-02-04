@@ -150,7 +150,9 @@ func (projection *AliasProjection) tostring() string {
 }
 
 func (projection *Projection) tostring() string {
-	if projection.ptype == "distinct" {
+	if projection.ptype == "addcolumn" {
+		return projection.column
+	} else if projection.ptype == "distinct" {
 		return projection.ptype + " " + projection.column
 	} else {
 		return projection.ptype + "( " + projection.column + " )"
@@ -223,6 +225,10 @@ func (projection *Projection) Min(col string) *Projection {
 	return NewProjection(col, "min")
 }
 
+func (projection *Projection) Column(col string) *Projection {
+	return NewProjection(col, "addcolumn")
+}
+
 func (restriction *Restriction) NotEqual(col string, val interface{}) *Restriction {
 	return NewRestriction(col, val, "<>")
 }
@@ -286,13 +292,15 @@ func (query *Query) AddCriteria(criteria *Criteria) *Query {
 	return query
 }
 
-func (criteria *Criteria) List() []interface{} {
+//TODO
+/*func (criteria *Criteria) List() []interface{} {
 	newquery := Query{Projection: "*", From: reflect.TypeOf(criteria.Entity).Elem().Name()}
 	newquery.transform()
 	return nil
-}
+}*/
 
 func main() {
+	//Example #1
 	var student Student = Student{name: "abc", age: 9, rollno: 100}
 	criteria := CreateCriteria(&student)
 	var restriction Restriction
@@ -310,19 +318,73 @@ func main() {
 	query.AddCriteria(criteria)
 	query.transform()
 
-	//Another Example
-	//criteria2 := CreateCriteria(&student)
-	//This will return the list of all records. criteria2.List() ==>SELECT * FROM Student
+	//Example2 SELECT COUNT(*) FROM STUDENT WHERE age > 10
+	criteria2 := CreateCriteria(&student)
+	var restriction2 Restriction
+	var projection2 Projection
+	criteria2.addP(projection2.Count("*")).add(restriction2.Gt("age", "10"))
+	query2 := NewQuery()
+	query2.AddCriteria(criteria2)
+	query2.Project()
+	query2.transform()
+
+	//Example3 SELECT count(*) AS count FROM STUDENT where age >10 and name like '%abc%'
+	criteria3 := CreateCriteria(&student)
+	var restriction3 Restriction
+	var projection3 Projection
+	var aliasprojection2 AliasProjection
+	criteria3.addP(projection3.Count("*")).addP(aliasprojection2.Alias("", "count"))
+	criteria3.add(restriction3.Gt("age", "10")).add(restriction3.Like("name", "%ab%"))
+	query3 := NewQuery()
+	query3.AddCriteria(criteria3)
+	query3.transform()
+
+	//Example4 SELECT count(*), DISTINCT name, age FROM Student
+	criteria4 := CreateCriteria(&student)
+	var projection4 Projection
+	criteria4.addP(projection4.Count("*")).addP(projection4.Distinct("name")).addP(projection.Column("age"))
+	query4 := NewQuery()
+	query4.AddCriteria(criteria4)
+	query4.transform()
+
+	//TODO
+	//Example SELECT * FROM Student
+	/*	criteria5 := CreateCriteria(&student)
+		criteria5.List()
+	*/
+
+	//Example5 SELECT * FROM Student GroupBy age
+	criteria5 := CreateCriteria(&student)
+	var projection5 Projection
+	var restriction5 Restriction
+	criteria5.addP(projection5.Column("*"))
+	criteria5.add(restriction5.GroupBy("age"))
+	query5 := NewQuery()
+	query5.AddCriteria(criteria5)
+	query5.transform()
+
+	//Example6 SELECT name, age FROM Student Groupby age Orderby name DESC
+	criteria6 := CreateCriteria(&student)
+	var projection6 Projection
+	var restriction6 Restriction
+	criteria6.addP(projection6.Column("name")).addP(projection6.Column("age"))
+	criteria6.add(restriction6.GroupBy("age")).add(restriction6.OrderBy("name", "DESC"))
+	query6 := NewQuery()
+	query6.AddCriteria(criteria6)
+	query6.transform()
 
 }
 
 func (query *Query) transform() {
 	var tokens []string = make([]string, 0)
 	var orderbyflag bool = false
-	var groupbyflag = false
+	var groupbyflag bool = false
+	var whereflag bool = false
 	//var ent string
 	if query.Projection != "" {
 		tokens = append(tokens, "SELECT", query.Projection)
+	} else {
+		tokens = append(tokens, "SELECT")
 	}
 	if len(query.Filter.Projections) > 0 {
 		for i := 0; i < len(query.Filter.Projections); i++ {
@@ -348,11 +410,13 @@ func (query *Query) transform() {
 	}
 	if len(query.Filter.Restrictions) > 0 {
 		//TODO
-
-		tokens = append(tokens, "WHERE")
 		for i := 0; i < len(query.Filter.Restrictions); i++ {
 			switch t := query.Filter.Restrictions[i].(type) {
 			case *Restriction:
+				if !whereflag {
+					tokens = append(tokens, "WHERE")
+					whereflag = true
+				}
 				if query.Filter.combiners[i] == "NOT" {
 					tokens = append(tokens, "( NOT", query.Filter.Restrictions[i].(*Restriction).tostring(), ")")
 				} else if i == 0 || i == len(query.Filter.Restrictions)-1 {
@@ -362,6 +426,10 @@ func (query *Query) transform() {
 				}
 
 			case *BetweenRestriction:
+				if !whereflag {
+					tokens = append(tokens, "WHERE")
+					whereflag = true
+				}
 				if i == 0 || i == len(query.Filter.Restrictions)-1 {
 					tokens = append(tokens, query.Filter.Restrictions[i].(*BetweenRestriction).tostring())
 				} else {
@@ -369,6 +437,10 @@ func (query *Query) transform() {
 				}
 
 			case *InRestriction:
+				if !whereflag {
+					tokens = append(tokens, "WHERE")
+					whereflag = true
+				}
 				if i == 0 || i == len(query.Filter.Restrictions)-1 {
 					tokens = append(tokens, query.Filter.Restrictions[i].(*InRestriction).tostring())
 				} else {
