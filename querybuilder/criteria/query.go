@@ -5,6 +5,7 @@ import (
 	c "github.com/morg/querybuilder/commons"
 	pj "github.com/morg/querybuilder/criteria/projections"
 	cr "github.com/morg/querybuilder/criteria/restrictions"
+	ty "github.com/morg/querybuilder/criteria/types"
 	"reflect"
 	"strings"
 )
@@ -119,6 +120,9 @@ func (query *Query) Transform() {
 				fmt.Printf("%T", t)
 			}
 		}
+
 	}
 	fmt.Println(tokens)
+	fmt.Println(ty.TypeMemInstance.Fields)
+
 }

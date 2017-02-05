@@ -2,6 +2,7 @@ package restrictions
 
 import (
 	c "github.com/morg/querybuilder/commons"
+	t "github.com/morg/querybuilder/criteria/types"
 	"strings"
 )
 
@@ -19,8 +20,9 @@ func (restriction *InRestriction) Tostring() string {
 	stmt = append(stmt, c.Type_Space)
 	stmt = append(stmt, "(")
 	elemlist := make([]string, 0)
-	for _, v := range restriction.list {
-		elemlist = append(elemlist, v.(string))
+	for range restriction.list {
+		/*elemlist = append(elemlist, v.(string))*/
+		elemlist = append(elemlist, "?")
 	}
 	stmt = append(stmt, strings.Join(elemlist, ","))
 	stmt = append(stmt, ")")
@@ -28,6 +30,9 @@ func (restriction *InRestriction) Tostring() string {
 }
 
 func NewInRestriction(col string, vals []interface{}, rtype string) *InRestriction {
+	for _, val := range vals {
+		t.TypeMemInstance.Fields = append(t.TypeMemInstance.Fields, t.NewTypeInfo(val, c.Findtype(val)))
+	}
 	return &InRestriction{column: col, list: vals, rtype: rtype}
 }
 

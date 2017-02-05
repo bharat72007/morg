@@ -19,6 +19,7 @@ func CreateCriteria(class interface{}) *Criteria {
 func (criteria *Criteria) Add(restriction interface{}) *Criteria {
 	criteria.Restrictions = append(criteria.Restrictions, restriction)
 	criteria.Combiners = append(criteria.Combiners, c.Keyword_And)
+
 	return criteria
 }
 

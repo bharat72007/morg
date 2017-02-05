@@ -56,3 +56,16 @@ const (
 	Aggregate_Min   = "MIN"
 	Aggregate_Max   = "MAX"
 )
+
+func Findtype(value interface{}) string {
+	switch value.(type) {
+	case string:
+		return "string"
+	case int32:
+		return "int32"
+	case int64:
+		return "int64"
+	default:
+		return "interface{}"
+	}
+}

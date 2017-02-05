@@ -2,6 +2,7 @@ package restrictions
 
 import (
 	c "github.com/morg/querybuilder/commons"
+	t "github.com/morg/querybuilder/criteria/types"
 	"strings"
 )
 
@@ -12,6 +13,7 @@ type Restriction struct {
 }
 
 func NewRestriction(col string, val interface{}, rtype string) *Restriction {
+	t.TypeMemInstance.Fields = append(t.TypeMemInstance.Fields, t.NewTypeInfo(val, c.Findtype(val)))
 	return &Restriction{column: col, value: val, rtype: rtype}
 }
 
@@ -39,6 +41,7 @@ func (restriction *Restriction) Tostring() string {
 	}
 	stmt = append(stmt, rtypeval)
 	stmt = append(stmt, c.Type_Space)
-	stmt = append(stmt, restriction.value.(string))
+	/*stmt = append(stmt, restriction.value.(string))*/
+	stmt = append(stmt, "?)")
 	return strings.Join(stmt, "")
 }
