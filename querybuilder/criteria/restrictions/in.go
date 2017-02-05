@@ -30,6 +30,7 @@ func (restriction *InRestriction) Tostring() string {
 }
 
 func NewInRestriction(col string, vals []interface{}, rtype string) *InRestriction {
+	t.CreateTypeMemInstance()
 	for _, val := range vals {
 		t.TypeMemInstance.Fields = append(t.TypeMemInstance.Fields, t.NewTypeInfo(val, c.Findtype(val)))
 	}

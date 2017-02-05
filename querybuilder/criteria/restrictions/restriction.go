@@ -13,6 +13,7 @@ type Restriction struct {
 }
 
 func NewRestriction(col string, val interface{}, rtype string) *Restriction {
+	t.CreateTypeMemInstance()
 	t.TypeMemInstance.Fields = append(t.TypeMemInstance.Fields, t.NewTypeInfo(val, c.Findtype(val)))
 	return &Restriction{column: col, value: val, rtype: rtype}
 }
@@ -42,6 +43,6 @@ func (restriction *Restriction) Tostring() string {
 	stmt = append(stmt, rtypeval)
 	stmt = append(stmt, c.Type_Space)
 	/*stmt = append(stmt, restriction.value.(string))*/
-	stmt = append(stmt, "?)")
+	stmt = append(stmt, "?")
 	return strings.Join(stmt, "")
 }

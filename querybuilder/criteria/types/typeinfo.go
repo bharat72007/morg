@@ -19,6 +19,12 @@ func NewTypeInfo(value interface{}, typeinfo string) TypeInfo {
 	return TypeInfo{Value: value, Type: typeinfo}
 }
 
-func init() {
-	TypeMemInstance = NewTypeMem()
+func CreateTypeMemInstance() {
+	if TypeMemInstance == nil {
+		TypeMemInstance = NewTypeMem()
+	}
+}
+
+func ResetTypeMemInstance() {
+	TypeMemInstance = nil
 }

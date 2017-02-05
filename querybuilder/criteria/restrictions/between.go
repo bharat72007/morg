@@ -14,6 +14,7 @@ type BetweenRestriction struct {
 }
 
 func NewBetweenRestriction(col string, lvalue, uvalue interface{}, rtype string) *BetweenRestriction {
+	t.CreateTypeMemInstance()
 	t.TypeMemInstance.Fields = append(t.TypeMemInstance.Fields, t.NewTypeInfo(lvalue, c.Findtype(lvalue)))
 	t.TypeMemInstance.Fields = append(t.TypeMemInstance.Fields, t.NewTypeInfo(uvalue, c.Findtype(uvalue)))
 	return &BetweenRestriction{column: col, lbound: lvalue, ubound: uvalue, rtype: rtype}

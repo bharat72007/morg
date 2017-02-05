@@ -2,6 +2,7 @@ package criteria
 
 import (
 	"fmt"
+	db "github.com/morg/db"
 	c "github.com/morg/querybuilder/commons"
 	pj "github.com/morg/querybuilder/criteria/projections"
 	cr "github.com/morg/querybuilder/criteria/restrictions"
@@ -122,7 +123,13 @@ func (query *Query) Transform() {
 		}
 
 	}
-	fmt.Println(tokens)
+	if ty.TypeMemInstance == nil {
+		db.CreateSQL(tokens, nil)
+	} else {
+		db.CreateSQL(tokens, ty.TypeMemInstance.Fields)
+	}
+	ty.ResetTypeMemInstance()
+	/*fmt.Println(tokens)
 	fmt.Println(ty.TypeMemInstance.Fields)
-
+	*/
 }
