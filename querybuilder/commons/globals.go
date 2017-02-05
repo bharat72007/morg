@@ -58,11 +58,16 @@ const (
 )
 
 func Findtype(value interface{}) string {
+
 	switch value.(type) {
 	case string:
 		return "string"
-	case int32:
-		return "int32"
+	case float32:
+		return "float32"
+	case float64:
+		return "float64"
+	case int:
+		return "int"
 	case int64:
 		return "int64"
 	default:

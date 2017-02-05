@@ -23,7 +23,7 @@ func main() {
 	var projection pj.Projection
 	var aliasprojection pj.AliasProjection
 
-	criteria.Exclude(restriction.Equal("name", "mane")).Or(restriction.Equal("age", 22)).Add(restriction.Equal("age", 22)).Add(restriction.Gt("rollno", 900)).Add(restriction.NotEqual("age", 80)).Add(restriction.Between("name", 1, 9)).Add(restriction.In("age", ag)).Add(restriction.Limit(10)).Add(restriction.Offset(2)).Add(restriction.GroupBy("name")).Add(restriction.GroupBy("age")).Add(restriction.OrderBy("age", "ASC")).Add(restriction.OrderBy("name", "DESC"))
+	criteria.Exclude(restriction.Equal("name", "mane")).Or(restriction.Equal("age", 22.99)).Add(restriction.Equal("age", 22)).Add(restriction.Gt("rollno", 900)).Add(restriction.NotEqual("age", 80)).Add(restriction.Between("name", 1, 9)).Add(restriction.In("age", ag)).Add(restriction.Limit(10)).Add(restriction.Offset(2)).Add(restriction.GroupBy("name")).Add(restriction.GroupBy("age")).Add(restriction.OrderBy("age", "ASC")).Add(restriction.OrderBy("name", "DESC"))
 	//(NOT name = "mane") AND age = 22 AND rollno > 900 AND age <> 80 AND (re OR rs)
 	criteria.AddP(projection.Sum("age")).AddP(projection.Count("*")).AddP(projection.Distinct("name")).AddP(aliasprojection.Alias("name", "StudentName"))
 	query := cr.NewQuery()
