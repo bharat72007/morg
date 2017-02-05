@@ -25,7 +25,7 @@ func main() {
 
 	criteria.Exclude(restriction.Equal("name", "mane")).Or(restriction.Equal("age", 22.99)).Add(restriction.Equal("age", 22)).Add(restriction.Gt("rollno", 900)).Add(restriction.NotEqual("age", 80)).Add(restriction.Between("name", 1, 9)).Add(restriction.In("age", ag)).Add(restriction.Limit(10)).Add(restriction.Offset(2)).Add(restriction.GroupBy("name")).Add(restriction.GroupBy("age")).Add(restriction.OrderBy("age", "ASC")).Add(restriction.OrderBy("name", "DESC"))
 	//(NOT name = "mane") AND age = 22 AND rollno > 900 AND age <> 80 AND (re OR rs)
-	criteria.AddP(projection.Sum("age")).AddP(projection.Count("*")).AddP(projection.Distinct("name")).AddP(aliasprojection.Alias("name", "StudentName"))
+	criteria.AddP(projection.Sum("age")).AddP(projection.CountAll()).AddP(projection.Distinct("name")).AddP(aliasprojection.Alias("name", "StudentName"))
 	query := cr.NewQuery()
 	query.Project("name", "age", "rollno", "Student.name") /*.Tables("User", "Student")*/
 	query.AddCriteria(criteria)
@@ -35,7 +35,7 @@ func main() {
 	criteria2 := cr.CreateCriteria(&student)
 	var restriction2 rs.Restriction
 	var projection2 pj.Projection
-	criteria2.AddP(projection2.Count("*")).Add(restriction2.Gt("age", "10"))
+	criteria2.AddP(projection2.CountAll()).Add(restriction2.Gt("age", "10"))
 	query2 := cr.NewQuery()
 	query2.AddCriteria(criteria2)
 	query2.Project()
@@ -46,7 +46,7 @@ func main() {
 	var restriction3 rs.Restriction
 	var projection3 pj.Projection
 	var aliasprojection2 pj.AliasProjection
-	criteria3.AddP(projection3.Count("*")).AddP(aliasprojection2.Alias("", "count"))
+	criteria3.AddP(projection3.CountAll()).AddP(aliasprojection2.Alias("", "count"))
 	criteria3.Add(restriction3.Gt("age", "10")).Add(restriction3.Like("name", "%ab%"))
 	query3 := cr.NewQuery()
 	query3.AddCriteria(criteria3)
@@ -55,7 +55,7 @@ func main() {
 	//Example4 SELECT count(*), DISTINCT name, age FROM Student
 	criteria4 := cr.CreateCriteria(&student)
 	var projection4 pj.Projection
-	criteria4.AddP(projection4.Count("*")).AddP(projection4.Distinct("name")).AddP(projection.Column("age"))
+	criteria4.AddP(projection4.CountAll()).AddP(projection4.Distinct("name")).AddP(projection.Column("age"))
 	query4 := cr.NewQuery()
 	query4.AddCriteria(criteria4)
 	query4.Transform()
@@ -70,7 +70,7 @@ func main() {
 	criteria5 := cr.CreateCriteria(&student)
 	var projection5 pj.Projection
 	var restriction5 rs.Restriction
-	criteria5.AddP(projection5.Column("*"))
+	criteria5.AddP(projection5.ColumnAll())
 	criteria5.Add(restriction5.GroupBy("age"))
 	query5 := cr.NewQuery()
 	query5.AddCriteria(criteria5)

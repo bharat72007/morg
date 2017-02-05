@@ -40,3 +40,7 @@ func (projection *Projection) Distinct(col string) *Projection {
 func (projection *Projection) Column(col string) *Projection {
 	return NewProjection(col, c.Type_Project)
 }
+
+func (projection *Projection) ColumnAll() *Projection {
+	return NewProjection("*", c.Type_Project)
+}
