@@ -70,8 +70,8 @@ func (query *Query) Transform() {
 				}
 				if query.Filter.Combiners[i] == c.Keyword_Not {
 					tokens = append(tokens, "( "+c.Keyword_Not, query.Filter.Restrictions[i].(*cr.Restriction).Tostring(), ")")
-				} else if i == 0 || i == len(query.Filter.Restrictions)-1 {
-					tokens = append(tokens, query.Filter.Restrictions[i].(*cr.Restriction).Tostring())
+				} else if i == 0 /*|| i == len(query.Filter.Restrictions)-1 */ {
+					tokens = append(tokens /*query.Filter.Combiners[i],*/, query.Filter.Restrictions[i].(*cr.Restriction).Tostring())
 				} else {
 					tokens = append(tokens, query.Filter.Combiners[i], query.Filter.Restrictions[i].(*cr.Restriction).Tostring())
 				}

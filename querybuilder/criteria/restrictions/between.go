@@ -26,10 +26,10 @@ func (restriction *BetweenRestriction) Tostring() string {
 	stmt = append(stmt, c.Type_Space)
 	stmt = append(stmt, restriction.column)
 	stmt = append(stmt, c.Type_Space)
-	stmt = append(stmt, restriction.lbound.(string))
+	stmt = append(stmt, "("+restriction.lbound.(string))
 	stmt = append(stmt, c.Type_Space)
 	stmt = append(stmt, c.Keyword_And)
 	stmt = append(stmt, c.Type_Space)
-	stmt = append(stmt, restriction.ubound.(string))
+	stmt = append(stmt, restriction.ubound.(string)+")")
 	return strings.Join(stmt, "")
 }
